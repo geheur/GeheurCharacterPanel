@@ -1,0 +1,10 @@
+<Ui>
+	<Frame name="MyFrame" inherits="" parent="CharacterFrame">
+		<!-- <Size><AbsDimension x="100" y="100"/></Size> -->
+		<Anchors>
+			<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="CharacterFrameInset" x="3" y="0"/>
+			<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="CharacterFrameInset" x="253" y="0"/>
+			<!--<Anchor point="BOTTOMRIGHT" relativeTo="CharacterFrame" x="-3" y="2"/>-->
+		</Anchors>
+	</Frame>
+</Ui>

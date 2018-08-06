@@ -1,0 +1,12 @@
+## Interface: 80000
+## Title: Talents in character page
+## Author: geheur
+## Version: 1.0
+## Notes: 
+## DefaultState: Enabled
+## LoadOnDemand: 0
+## SavedVariables: 
+
+frames.xml
+
+main.lua
