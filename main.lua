@@ -130,6 +130,9 @@ function events:PLAYER_ENTERING_WORLD(...)
 	end
 	]]--
 
+		PlayerTalentFrameTalents.talentGroup = PlayerTalentFrame.talentGroup
+		TalentFrame_Update(PlayerTalentFrameTalents, "player")
+
 	local _, name, description, icon = GetSpecializationInfo(1, false, self.isPet, nil, sex);
 	MyButton1:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
 	_, name, description, icon = GetSpecializationInfo(2, false, self.isPet, nil, sex);
@@ -208,8 +211,6 @@ do
 		PrintAnchor(PlayerTalentFrameTalentsPvpTalentFrame)
 		--PlayerTalentFrameTab2:Click()
 
-		PlayerTalentFrameTalents.talentGroup = PlayerTalentFrame.talentGroup
-		TalentFrame_Update(PlayerTalentFrameTalents, "player")
 
 		--PaperDollEquipmentManagerFrame
 		PaperDollEquipmentManagerPane:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
