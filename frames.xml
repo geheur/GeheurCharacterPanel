@@ -1,4 +1,8 @@
 <Ui>
+	<Button name="MySpecButton" inherits="UIPanelCloseButton" virtual="true">
+		<Size><AbsDimension x="50" y="50"/></Size>
+	</Button>
+
 	<Frame name="MyFrame" inherits="" parent="CharacterFrame">
 		<!-- <Size><AbsDimension x="100" y="100"/></Size> -->
 		<Anchors>
@@ -6,5 +10,59 @@
 			<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="CharacterFrameInset" x="253" y="0"/>
 			<!--<Anchor point="BOTTOMRIGHT" relativeTo="CharacterFrame" x="-3" y="2"/>-->
 		</Anchors>
+		<Layer level="BORDER">
+			<Texture file="Interface\Common\bluemenu-main" parentKey="selectedTex" hidden="false">
+				<Size x="224" y="80"/>
+				<Anchors>
+					<Anchor point="CENTER"/>
+				</Anchors>
+				<TexCoords left="0.00390625" right="0.87890625" top="0.59179688" bottom="0.66992188"/>
+			</Texture>
+		</Layer>
+	</Frame>
+
+	<Frame name="MySpecButtonsBar">
+		<Frames>
+			<Button name="MyButton1" inherits="MySpecButton">
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="MySpecButtonsBar"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						SetSpecialization(1)
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="MyButton2" inherits="MySpecButton">
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="MyButton1"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						SetSpecialization(2)
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="MyButton3" inherits="MySpecButton">
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="MyButton2"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						SetSpecialization(3)
+					</OnClick>
+				</Scripts>
+			</Button>
+			<Button name="MyButton4" inherits="MySpecButton">
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="MyButton3"/>
+				</Anchors>
+				<Scripts>
+					<OnClick>
+						SetSpecialization(3)
+					</OnClick>
+				</Scripts>
+			</Button>
+		</Frames>
 	</Frame>
 </Ui>
