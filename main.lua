@@ -52,6 +52,8 @@ local function processTalent(rowN, talentN)
 	--print(PlayerTalentFrameTalentsTalentRow1Talent1:GetHeight())
 	--PlayerTalentFrameTalentsTalentRow1Talent1.GlowFrame:Hide()
 	--PlayerTalentFrameTalentsTalentRow1Talent1Selection:Hide()
+	--talent.ShadowedTexture:SetPoint("TOPLEFT", talent) -- ElvUI only.
+	--talent.ShadowedTexture:SetPoint("BOTTOMRIGHT", talent) -- ElvUI only.
 	talent:SetWidth(40)
 	if talentN == 1 then
 		local leftAnchor = _G["PlayerTalentFrameTalentsTalentRow" .. rowN]
@@ -112,43 +114,7 @@ end
 
 local debug = true
 
-local events = {}
-function events:PLAYER_ENTERING_WORLD(...)
-	if ViragDevTool_AddData and debug then
-	end
-
-	--[[
-	if (UnitLevel("player") >= SHOW_SPEC_LEVEL) then
-		return;
-	end
-	--]]
-
-	TalentFrame_LoadUI();
-	--[[
-	if ( PlayerTalentFrame_Toggle ) then
-		PlayerTalentFrame_Toggle(suggestedTab);
-	end
-	]]--
-
-		PlayerTalentFrameTalents.talentGroup = PlayerTalentFrame.talentGroup
-		TalentFrame_Update(PlayerTalentFrameTalents, "player")
-
-	local _, name, description, icon = GetSpecializationInfo(1, false, self.isPet, nil, sex);
-	MyButton1:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
-	_, name, description, icon = GetSpecializationInfo(2, false, self.isPet, nil, sex);
-	MyButton2:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
-	_, name, description, icon = GetSpecializationInfo(3, false, self.isPet, nil, sex);
-	MyButton3:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
-	_, name, description, icon = GetSpecializationInfo(4, false, self.isPet, nil, sex);
-	MyButton4:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
-
-end
-do
-	local addonIsLoaded = false
-	function events:ADDON_LOADED(...)
-		if addonIsLoaded then return end
-		addonIsLoaded = true
-
+local function onloaded()
 		--PrintAnchor(CharacterFrameInsetRight)
 		CharacterFrameInsetRight:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
 		CHARACTERFRAME_EXPANDED_WIDTH = 790
@@ -208,13 +174,64 @@ do
 		end
 		--]]
 
-		PrintAnchor(PlayerTalentFrameTalentsPvpTalentFrame)
+		--PrintAnchor(PlayerTalentFrameTalentsPvpTalentFrame)
 		--PlayerTalentFrameTab2:Click()
 
 
 		--PaperDollEquipmentManagerFrame
 		PaperDollEquipmentManagerPane:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
 		--PaperDollEquipmentManagerPane:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
+end
+
+local events = {}
+function events:PLAYER_ENTERING_WORLD(...)
+	if ViragDevTool_AddData and debug then
+	end
+
+	--[[
+	if (UnitLevel("player") >= SHOW_SPEC_LEVEL) then
+		return;
+	end
+	--]]
+
+
+	TalentFrame_LoadUI();
+	--[[
+	if ( PlayerTalentFrame_Toggle ) then
+		PlayerTalentFrame_Toggle(suggestedTab);
+	end
+	]]--
+
+		PlayerTalentFrameTalents.talentGroup = PlayerTalentFrame.talentGroup
+		TalentFrame_Update(PlayerTalentFrameTalents, "player")
+
+	local _, name, description, icon = GetSpecializationInfo(1, false, self.isPet, nil, sex);
+	MyButton1:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
+	_, name, description, icon = GetSpecializationInfo(2, false, self.isPet, nil, sex);
+	MyButton2:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
+	_, name, description, icon = GetSpecializationInfo(3, false, self.isPet, nil, sex);
+	MyButton3:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
+	_, name, description, icon = GetSpecializationInfo(4, false, self.isPet, nil, sex);
+	MyButton4:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
+
+end
+
+do
+	local fixedCharPanel = false
+	local addonIsLoaded = false
+	function events:ADDON_LOADED(...)
+		if addonIsLoaded then return end
+		addonIsLoaded = true
+
+		local CharacterFrame_OnShow_old = CharacterFrame_OnShow
+		CharacterFrame:HookScript("OnShow", function()
+			CharacterFrame_OnShow_old()
+			if not fixedCharPanel then
+				onloaded()
+				fixedCharPanel = true;
+			end
+		end)
+
 
 		GENERAL_CHAT_DOCK.primary:SetMaxResize(5000, 5000) -- TODO move to a personal addon.
 	end
