@@ -115,6 +115,61 @@ end
 local debug = true
 
 local function onloaded()
+
+		--[[
+		EquipmentFlyout_UpdateFlyout_old = EquipmentFlyout_UpdateFlyout
+		EquipmentFlyout_UpdateFlyout = function(button)
+			EquipmentFlyout_UpdateFlyout_old(button)
+			local hasLock = button.popoutButton and button.popoutButton.flyoutLocked;
+			if ( (not (EquipmentFlyoutFrame:IsVisible() and EquipmentFlyoutFrame.button == button)) or
+				hasLock) then
+				EquipmentFlyout_Show(button);
+			elseif ( (EquipmentFlyoutFrame:IsVisible() and EquipmentFlyoutFrame.button == button) and
+				not hasLock ) then
+				EquipmentFlyoutFrame:Hide();
+			end
+		end
+		--]]
+
+		-- Lol, this introduces taint.
+		--[[
+		IsModifiedClick_old = IsModifiedClick
+		function IsModifiedClick(str, ...)
+			--print("IsModifiedClick")
+			local returnValue = IsModifiedClick_old(str, ...)
+			if str == "SHOWITEMFLYOUT" then
+				return true
+			end
+			return returnValue
+		end
+		--]]
+
+
+		-- TODO needs hooking.
+		--[[
+		local EquipmentFlyout_OnUpdate_old = EquipmentFlyout_OnUpdate
+		EquipmentFlyout_OnUpdate = function(self, elapsed)
+			EquipmentFlyout_OnUpdate_old(self, elapsed)
+		end
+function EquipmentFlyout_OnUpdate(self, elapsed)
+	if ( not IsModifiedClick("SHOWITEMFLYOUT") ) then
+		local button = self.button;
+
+		if ( button and button.popoutButton and button.popoutButton.flyoutLocked ) then
+			EquipmentFlyout_UpdateFlyout(button);
+		elseif ( button and button:IsMouseOver() ) then
+			local onEnterFunc = button:GetScript("OnEnter");
+			if ( onEnterFunc ) then
+				onEnterFunc(button);
+			end
+		else
+			self:Hide();
+		end
+	end
+end
+		--]]
+
+
 		--PrintAnchor(CharacterFrameInsetRight)
 		CharacterFrameInsetRight:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
 		CHARACTERFRAME_EXPANDED_WIDTH = 790
@@ -223,9 +278,7 @@ do
 		if addonIsLoaded then return end
 		addonIsLoaded = true
 
-		local CharacterFrame_OnShow_old = CharacterFrame_OnShow
 		CharacterFrame:HookScript("OnShow", function()
-			CharacterFrame_OnShow_old()
 			if not fixedCharPanel then
 				onloaded()
 				fixedCharPanel = true;
