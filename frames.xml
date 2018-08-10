@@ -3,7 +3,7 @@
 		<Size><AbsDimension x="50" y="50"/></Size>
 	</Button>
 
-	<Frame name="MyFrame" inherits="" parent="CharacterFrame">
+	<Frame name="MyFrame" inherits="" parent="PaperDollFrame">
 		<!-- <Size><AbsDimension x="100" y="100"/></Size> -->
 		<Anchors>
 			<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="CharacterFrameInset" x="3" y="0"/>
