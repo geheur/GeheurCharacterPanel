@@ -283,15 +283,13 @@ function CharacterPanelOnShow()
 		TalentFrame_LoadUI()
 		talentsloaded = true
 	end
+	PlayerTalentFrameTalents:Show()
 end
 end
 
 local function SetupCharacterPanel()
 	CharacterFrame:HookScript("OnShow", function()
-		if not fixedCharPanel then
-			CharacterPanelOnShow()
-			fixedCharPanel = true;
-		end
+		CharacterPanelOnShow()
 	end)
 
 	--CharacterFrameInsetRight:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
@@ -366,7 +364,6 @@ function events:PLAYER_ENTERING_WORLD(...)
 end
 
 do
-local fixedCharPanel = false
 local addonIsLoaded = false
 function events:ADDON_LOADED(...)
 	if addonIsLoaded then return end
