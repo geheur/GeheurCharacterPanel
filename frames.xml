@@ -1,31 +1,59 @@
-<Ui>
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/
+..\FrameXML\UI.xsd">
+
+	<Font name="TalentCdFont" font="Fonts/ARIALN.TTF" outline="THICK" height="16" virtual="true"/>
+	<Font name="TomeCountFont" font="Fonts/ARIALN.TTF" outline="THICK" height="11" virtual="true"/>
+
+	<FontString name="TalentCooldownString" parentKey="Text" inherits="TalentCdFont" virtual="true">
+		<Anchors>
+			<Anchor point="CENTER"/>
+		</Anchors>
+	</FontString>
+
+	<FontString name="TomeCountString" parentKey="TomeCountText" inherits="TomeCountFont" virtual="true">
+		<Anchors>
+			<Anchor point="BOTTOMRIGHT" x="-2" y="5" />
+		</Anchors>
+	</FontString>
+
 	<Button name="MySpecButton" inherits="UIPanelCloseButton" virtual="true">
 		<Size><AbsDimension x="50" y="50"/></Size>
 	</Button>
 
 	<Frame name="MyFrame" inherits="" parent="PaperDollFrame">
-		<!-- <Size><AbsDimension x="100" y="100"/></Size> -->
 		<Anchors>
-			<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="CharacterFrameInset" x="3" y="0"/>
-			<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="CharacterFrameInset" x="253" y="0"/>
-			<!--<Anchor point="BOTTOMRIGHT" relativeTo="CharacterFrame" x="-3" y="2"/>-->
+			<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="CharacterFrameInsetRight" x="3" y="0"/>
+			<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="CharacterFrameInsetRight" x="253" y="0"/>
 		</Anchors>
-		<Layer level="BORDER">
-			<Texture file="Interface\Common\bluemenu-main" parentKey="selectedTex" hidden="false">
-				<Size x="224" y="80"/>
-				<Anchors>
-					<Anchor point="CENTER"/>
-				</Anchors>
-				<TexCoords left="0.00390625" right="0.87890625" top="0.59179688" bottom="0.66992188"/>
-			</Texture>
-		</Layer>
 	</Frame>
 
-	<Frame name="MySpecButtonsBar">
+	<Button name="TomeButton" inherits="SecureActionButtonTemplate,ActionButtonTemplate" parent="MyFrame">
+		<Anchors>
+			<Anchor point="BOTTOMLEFT"/>
+		</Anchors>
+		<Size x="50" y="50"/>
+		<Layers>
+			<Layer level="ARTWORK">
+				<Texture file="Interface\ChatFrame\ChatFrameBackground" parentKey="CombatIndicator">
+					<Anchors>
+						<Anchor point="TOPLEFT"/>
+						<Anchor point="BOTTOMRIGHT"/>
+					</Anchors>
+					<Color r="1.0" g="0.0" b="0.0" a="0.5"/>
+				</Texture>
+			</Layer>
+			<Layer level="OVERLAY">
+				<FontString inherits="TalentCooldownString"/>
+				<FontString inherits="TomeCountString"/>
+			</Layer>
+		</Layers>
+	</Button>
+
+	<Frame name="SpecButtonsBar">
 		<Frames>
-			<Button name="MyButton1" inherits="MySpecButton">
+			<Button name="SpecChange1" inherits="MySpecButton">
 				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="MySpecButtonsBar"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="SpecButtonsBar"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
@@ -33,9 +61,9 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="MyButton2" inherits="MySpecButton">
+			<Button name="SpecChange2" inherits="MySpecButton">
 				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="MyButton1"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="SpecChange1"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
@@ -43,9 +71,9 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="MyButton3" inherits="MySpecButton">
+			<Button name="SpecChange3" inherits="MySpecButton">
 				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="MyButton2"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="SpecChange2"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>
@@ -53,9 +81,9 @@
 					</OnClick>
 				</Scripts>
 			</Button>
-			<Button name="MyButton4" inherits="MySpecButton">
+			<Button name="SpecChange4" inherits="MySpecButton">
 				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="MyButton3"/>
+					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="SpecChange3"/>
 				</Anchors>
 				<Scripts>
 					<OnClick>

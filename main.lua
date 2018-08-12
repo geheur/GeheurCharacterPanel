@@ -12,6 +12,8 @@
 -- TODO consider putting the talent frame in directly, instead of putting it into MyFrame.
 -- TODO is it better to move the existing talent frames, or create new ones?
 
+local debug = true
+
 function printTable(t)
 	for i,v in pairs(t) do
 		if type(v) == "table" then
@@ -30,16 +32,32 @@ local function PrintAnchor(frame)
 	end
 end
 
--- ### Register event handlers
-local function registerEventHandlers(events)
-	local frame = CreateFrame("Frame")
-	frame:SetScript("OnEvent", function(self, event, ...)
-	 events[event](self, ...); -- call one of the functions above
-	end);
-	for k, v in pairs(events) do
-	 frame:RegisterEvent(k); -- Register all events for which handlers have been defined
+local combatDeferQueue = {}
+local function combatDefer(f)
+	if InCombatLockdown() then
+		combatDeferQueue[#combatDeferQueue] = f
+	else
+		f()
 	end
 end
+
+-- ### addon-specific utility
+
+local function isTalentOnCd(row, col)
+	local onCd, remainingCd = false, 0
+
+	local _,name,_,selected,_,spellID,_,_,_,_,_ = GetTalentInfo(row, col, GetActiveSpecGroup())
+	if spellID ~= nil and selected then -- spellID ~= nil indicates that the talent adds a spell to the spellbook.
+		local startTime,duration,_ = GetSpellCooldown(spellID);
+		onCd = duration ~= 0
+		if onCd then
+			remainingCd = duration - (GetTime() - startTime)
+		end
+	end
+	return onCd, remainingCd
+end
+
+-- ### Talent interface move, resize, and modify.
 
 local function processTalent(rowN, talentN)
 	local talentName = "PlayerTalentFrameTalentsTalentRow" .. rowN .. "Talent" .. talentN
@@ -55,13 +73,24 @@ local function processTalent(rowN, talentN)
 	--talent.ShadowedTexture:SetPoint("TOPLEFT", talent) -- ElvUI only.
 	--talent.ShadowedTexture:SetPoint("BOTTOMRIGHT", talent) -- ElvUI only.
 	talent:SetWidth(40)
+
+	talent:CreateFontString(nil, "ARTWORK", "TalentCooldownString")
+	talent.Text:SetTextColor(1, 0, 0, 1)
+	talent:HookScript("OnUpdate", function(self)
+		local onCd, remainingCd = isTalentOnCd(rowN, talentN) 
+		if onCd then
+			self.Text:Show()
+			self.Text:SetText(string.format("%.0f", remainingCd))
+		else
+			self.Text:Hide()
+		end
+	end)
+
 	if talentN == 1 then
 		local leftAnchor = _G["PlayerTalentFrameTalentsTalentRow" .. rowN]
-		--print("Setting point", talent:GetName(), "to use anchor", leftAnchor:GetName())
 		talent:SetPoint("LEFT", leftAnchor, nil, 0, 0)
 	else
 		local leftAnchor = _G["PlayerTalentFrameTalentsTalentRow" .. rowN .. "Talent" .. (talentN - 1)]
-		--print("Setting point", talent:GetName(), "to use anchor", leftAnchor:GetName())
 		talent:SetPoint("LEFT", leftAnchor, "RIGHT", 0, 0)
 	end
 	talent.highlight:SetWidth(40)
@@ -112,130 +141,201 @@ local function processRow(rowN)
 	end
 end
 
-local debug = true
+-- ### Tome button
 
-local function onloaded()
+local buffs = {"Tome of the Tranquil Mind", "Codex of the Tranquil Mind", "Feint"} -- TODO remove "Feint".
+-- Priority order - item ids with lower indices will be used first.
+local items
+if false then
+	items = {12692, 140192} -- Dalaran Hearthstone
+else
+	items = {143785, 141446} -- SB tranquil mind tome from dalaran intro quest, regular tranquil mind tome.
+end
 
-		--[[
-		EquipmentFlyout_UpdateFlyout_old = EquipmentFlyout_UpdateFlyout
-		EquipmentFlyout_UpdateFlyout = function(button)
-			EquipmentFlyout_UpdateFlyout_old(button)
-			local hasLock = button.popoutButton and button.popoutButton.flyoutLocked;
-			if ( (not (EquipmentFlyoutFrame:IsVisible() and EquipmentFlyoutFrame.button == button)) or
-				hasLock) then
-				EquipmentFlyout_Show(button);
-			elseif ( (EquipmentFlyoutFrame:IsVisible() and EquipmentFlyoutFrame.button == button) and
-				not hasLock ) then
-				EquipmentFlyoutFrame:Hide();
+local function anyTalentOnCd()
+	local longestDuration = 0
+	for row=1,7 do
+		for col=1,3 do
+			local _,remainingCd = isTalentOnCd(row, col)
+			if remainingCd > longestDuration then
+				longestDuration = remainingCd
 			end
-		end
-		--]]
-
-		-- Lol, this introduces taint.
-		--[[
-		IsModifiedClick_old = IsModifiedClick
-		function IsModifiedClick(str, ...)
-			--print("IsModifiedClick")
-			local returnValue = IsModifiedClick_old(str, ...)
-			if str == "SHOWITEMFLYOUT" then
-				return true
-			end
-			return returnValue
-		end
-		--]]
-
-
-		-- TODO needs hooking.
-		--[[
-		local EquipmentFlyout_OnUpdate_old = EquipmentFlyout_OnUpdate
-		EquipmentFlyout_OnUpdate = function(self, elapsed)
-			EquipmentFlyout_OnUpdate_old(self, elapsed)
-		end
-function EquipmentFlyout_OnUpdate(self, elapsed)
-	if ( not IsModifiedClick("SHOWITEMFLYOUT") ) then
-		local button = self.button;
-
-		if ( button and button.popoutButton and button.popoutButton.flyoutLocked ) then
-			EquipmentFlyout_UpdateFlyout(button);
-		elseif ( button and button:IsMouseOver() ) then
-			local onEnterFunc = button:GetScript("OnEnter");
-			if ( onEnterFunc ) then
-				onEnterFunc(button);
-			end
-		else
-			self:Hide();
 		end
 	end
+	return longestDuration ~= 0, longestDuration
 end
-		--]]
 
+local function getNumTomes()
+	local total = 0
+	for i,v in pairs(items) do
+		total = total + GetItemCount(v)
+	end
+	return total
+end
 
-		--PrintAnchor(CharacterFrameInsetRight)
-		CharacterFrameInsetRight:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
-		CHARACTERFRAME_EXPANDED_WIDTH = 790
-		CharacterFrame:SetWidth(CHARACTERFRAME_EXPANDED_WIDTH)
-
-
-		TalentFrame_LoadUI()
-
-		--PrintAnchor(PlayerTalentFrameTalents)
-
-		PlayerTalentFrameTalents:SetParent(MyFrame)
-		PlayerTalentFrameTalents:SetPoint("TOPLEFT", MyFrame, nil, 0, 0)
-		PlayerTalentFrameTalents:SetPoint("BOTTOMRIGHT", MyFrame, nil, 0, 0)
-
-		PlayerTalentFrameTalents:DisableDrawLayer("BORDER")
-
-		PlayerTalentFrameTalents.unspentText:SetPoint("BOTTOM", PlayerTalentFrameTalents, "TOP", 0, -340)
-
-		--PlayerTalentFrameTalentsTutorialButton:Hide() -- Doesn't work.
-
-		for i=1,7 do
-			processRow(i)
-		end
-
-		PlayerTalentFrameTalentsPvpTalentButton:Click()
-		PlayerTalentFrameTalentsPvpTalentButton:SetPoint("RIGHT")
-		PlayerTalentFrameTalentsPvpTalentButton:SetPoint("BOTTOMRIGHT", PlayerTalentFrameTalents, "TOPRIGHT", -10, -10)
-
-		PlayerTalentFrameTalentsPvpTalentFrame:SetPoint("TOPRIGHT", PlayerTalentFrameTalents)
-		PlayerTalentFrameTalentsPvpTalentFrame:SetPoint("BOTTOMRIGHT", PlayerTalentFrameTalents)
-
-		--PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("ARTWORK")
-		PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("BACKGROUND")
-		PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("OVERLAY")
-		--PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("BORDER")
-
-		-- TODO currently not using MySpecButtonsBar to position buttons, I should figure out why that didn't work.
-		MySpecButtonsBar:SetPoint("TOPLEFT", PlayerTalentFrameTalents, "BOTTOMLEFT", 3, 0)
-		MySpecButtonsBar:SetParent(PlayerTalentFrameTalents)
-		MyButton1:SetPoint("TOPLEFT", PlayerTalentFrameTalents, "BOTTOMLEFT", 3, 0)
-		MyButton1:SetPoint("BOTTOMLEFT")
-		if not (select(2, UnitClass("player")) == "DRUID") then
-			MyButton4:Hide()
-		end
-
-		--[[
-		print("Regions:")
-		printTable(PlayerTalentFrameTalentsPvpTalentFrame:GetRegions())
-		for _,v in pairs(PlayerTalentFrameTalentsPvpTalentFrame:GetRegions()) do
-			print(v)
-			if v:GetNumPoints() == 1 then
-				local anchor = {frame:GetPoint(1)}
-				if anchor[1] == "TOPRIGHT" and anchor[4] == 0 and anchor[5] == 0 then
-					v:Hide()
+-- NOTE: Assumes there's only one talent switching buff up at a time.
+local function getTomeDurationRemaining()
+	for i=1,1000 do
+		local name,_,_,_,_,expirationTime,_,_,_,spellId = UnitBuff("player", i)
+		if name == nil then
+			return 0
+		else
+			for i,v in pairs(buffs) do
+				if name == v then
+					return expirationTime - GetTime()
 				end
 			end
 		end
-		--]]
+	end
+end
 
-		--PrintAnchor(PlayerTalentFrameTalentsPvpTalentFrame)
-		--PlayerTalentFrameTab2:Click()
+local function tomeButtonUpdate()
+	-- TODO add logic for rest area.
+	TomeButton.CombatIndicator:Hide()
+	TomeButton.Text:Hide()
 
+	-- Highlight.
+	if InCombatLockdown() then
+		TomeButton.CombatIndicator:Show()
+	end
 
-		--PaperDollEquipmentManagerFrame
-		PaperDollEquipmentManagerPane:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
-		--PaperDollEquipmentManagerPane:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
+	-- Text.
+	if IsResting() then
+		TomeButton.Text:SetText("Zzz")
+		TomeButton.Text:SetTextColor(0, 1, 0, 1)
+		TomeButton.Text:Show()
+		--TomeButtonIcon:SetTexture()
+	elseif anyTalentOnCd() then
+		local _,duration = anyTalentOnCd()
+		TomeButton.Text:SetText(string.format("%.0f", duration))
+		TomeButton.Text:SetTextColor(1, 0, 0, 1)
+		TomeButton.Text:Show()
+	else
+		local tomeDurationRemaining = getTomeDurationRemaining()
+		if tomeDurationRemaining ~= 0 then
+			TomeButton.Text:SetText(string.format("%.0f", tomeDurationRemaining))
+			TomeButton.Text:SetTextColor(1, 1, 1, 1)
+			TomeButton.Text:Show()
+		end
+	end
+	
+	TomeButton.TomeCountText:SetText(getNumTomes())
+end
+
+local function canChangeTalents()
+	return not InCombatLockdown() and (IsResting() or getTomeDurationRemaining() > 0)
+end
+
+local function tomeButtonItemUpdate()
+	for i,v in pairs(items) do
+		local count = GetItemCount(v)
+		if count > 0 then
+			combatDefer(function() print("setting item "..v) TomeButton:SetAttribute("macrotext", "/use item:"..v) end)
+			return
+		end
+	end
+end
+
+local function tomeButtonActiveUpdate()
+	-- No need to defer execution; once combat is left this function will be called again.
+	if InCombatLockdown() then
+		if debug then print("Could not (de)activate tome button, am in combat") end
+		return
+	end
+
+	if canChangeTalents() then
+		if debug then print("deactivating tome button") end
+		TomeButton:SetAttribute("type", nil)
+	else
+		if debug then print("activating tome button") end
+		TomeButton:SetAttribute("type", "macro")
+	end
+end
+
+local function initTomeButton()
+	TomeButtonIcon:SetTexture(GetItemIcon(143785))
+
+	tomeButtonItemUpdate()
+	tomeButtonActiveUpdate()
+
+	TomeButton:SetScript("OnUpdate", tomeButtonUpdate)
+	TomeButton:SetScript("OnShow", tomeButtonActiveUpdate)
+end
+
+local function AddSpecButtons()
+	SpecButtonsBar:SetParent(PlayerTalentFrameTalents)
+	SpecChange1:ClearAllPoints()
+	SpecChange1:SetPoint("TOPLEFT", PlayerTalentFrameTalents, "BOTTOMLEFT", 3, 0)
+	--SpecButtonsBar:SetPoint("TOPLEFT", PlayerTalentFrameTalents, "BOTTOMLEFT", 3, 0)
+	for i=1,4 do
+		local _, name, description, icon = GetSpecializationInfo(i, false, false, nil, sex);
+		_G["SpecChange"..i]:SetNormalTexture(icon)
+	end
+	if not (select(2, UnitClass("player")) == "DRUID") then
+		SpecChange4:Hide()
+	end
+end
+
+local CharacterPanelOnShow do
+local talentsloaded = false
+function CharacterPanelOnShow()
+	if not talentsloaded then
+		TalentFrame_LoadUI()
+		talentsloaded = true
+	end
+end
+end
+
+local function SetupCharacterPanel()
+	CharacterFrame:HookScript("OnShow", function()
+		if not fixedCharPanel then
+			CharacterPanelOnShow()
+			fixedCharPanel = true;
+		end
+	end)
+
+	--CharacterFrameInsetRight:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
+
+	PlayerTalentFrameTalents:SetParent(MyFrame)
+	PlayerTalentFrameTalents:SetPoint("TOPLEFT", MyFrame, nil, 0, 0)
+	PlayerTalentFrameTalents:SetPoint("BOTTOMRIGHT", MyFrame, nil, 0, 0)
+
+	PlayerTalentFrameTalents:DisableDrawLayer("BORDER")
+
+	PlayerTalentFrameTalents.unspentText:SetPoint("BOTTOM", PlayerTalentFrameTalents, "TOP", 0, -340)
+
+	--PlayerTalentFrameTalentsTutorialButton:Hide() -- Doesn't work.
+
+	for i=1,7 do
+		processRow(i)
+	end
+
+	PlayerTalentFrameTalentsPvpTalentButton:Click()
+	PlayerTalentFrameTalentsPvpTalentButton:SetPoint("RIGHT")
+	PlayerTalentFrameTalentsPvpTalentButton:SetPoint("BOTTOMRIGHT", PlayerTalentFrameTalents, "TOPRIGHT", -10, -10)
+
+	PlayerTalentFrameTalentsPvpTalentFrame:SetPoint("TOPRIGHT", PlayerTalentFrameTalents)
+	PlayerTalentFrameTalentsPvpTalentFrame:SetPoint("BOTTOMRIGHT", PlayerTalentFrameTalents)
+
+	--PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("ARTWORK")
+	PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("BACKGROUND")
+	PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("OVERLAY")
+	--PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("BORDER")
+	--PaperDollEquipmentManagerPane:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
+
+	AddSpecButtons()
+
+end
+
+--- ### events
+local function registerEventHandlers(events)
+	local frame = CreateFrame("Frame")
+	frame:SetScript("OnEvent", function(self, event, ...)
+	 events[event](self, ...); -- call one of the functions above
+	end);
+	for k, v in pairs(events) do
+	 frame:RegisterEvent(k); -- Register all events for which handlers have been defined
+	end
 end
 
 local events = {}
@@ -251,47 +351,34 @@ function events:PLAYER_ENTERING_WORLD(...)
 
 
 	TalentFrame_LoadUI();
+
 	--[[
 	if ( PlayerTalentFrame_Toggle ) then
 		PlayerTalentFrame_Toggle(suggestedTab);
 	end
 	]]--
 
-		PlayerTalentFrameTalents.talentGroup = PlayerTalentFrame.talentGroup
-		TalentFrame_Update(PlayerTalentFrameTalents, "player")
+	initTomeButton()
+	SetupCharacterPanel()
 
-	local _, name, description, icon = GetSpecializationInfo(1, false, self.isPet, nil, sex);
-	MyButton1:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
-	_, name, description, icon = GetSpecializationInfo(2, false, self.isPet, nil, sex);
-	MyButton2:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
-	_, name, description, icon = GetSpecializationInfo(3, false, self.isPet, nil, sex);
-	MyButton3:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
-	_, name, description, icon = GetSpecializationInfo(4, false, self.isPet, nil, sex);
-	MyButton4:SetNormalTexture(icon) -- TODO needs to be moved to enter world event.
-
+	PlayerTalentFrameTalents.talentGroup = PlayerTalentFrame.talentGroup
+	TalentFrame_Update(PlayerTalentFrameTalents, "player")
 end
 
 do
-	local fixedCharPanel = false
-	local addonIsLoaded = false
-	function events:ADDON_LOADED(...)
-		if addonIsLoaded then return end
-		addonIsLoaded = true
-
-		CharacterFrame:HookScript("OnShow", function()
-			if not fixedCharPanel then
-				onloaded()
-				fixedCharPanel = true;
-			end
-		end)
+local fixedCharPanel = false
+local addonIsLoaded = false
+function events:ADDON_LOADED(...)
+	if addonIsLoaded then return end
+	addonIsLoaded = true
 
 
-		GENERAL_CHAT_DOCK.primary:SetMaxResize(5000, 5000) -- TODO move to a personal addon.
-	end
+end
 end
 function events:PLAYER_SPECIALIZATION_CHANGED(...)
-	TalentFrame_LoadUI()
+	--TalentFrame_LoadUI()
 	PlayerTalentFrame_Refresh()
+	-- TODO is there a better way?
 	ToggleTalentFrame(2)
 	ToggleTalentFrame(2)
 
@@ -308,6 +395,31 @@ function events:PLAYER_SPECIALIZATION_CHANGED(...)
 
 	--local _, name, description, icon = GetSpecializationInfo(1, false, self.isPet, nil, sex);
 	--MyButton1:SetNormalTexture(icon)
+end
+function events:BAG_UPDATE(...)
+	print("BAG_UPDATE")
+	tomeButtonItemUpdate()
+end
+function events:PLAYER_REGEN_DISABLED(...)
+	tomeButtonActiveUpdate()
+	tomeButtonUpdate()
+end
+function events:PLAYER_REGEN_ENABLED(...)
+	for _,f in pairs(combatDeferQueue) do
+		f()
+	end
+
+	tomeButtonActiveUpdate()
+	tomeButtonUpdate()
+end
+function events:PLAYER_UPDATE_RESTING(...)
+	tomeButtonActiveUpdate()
+	tomeButtonUpdate()
+end
+function events:UNIT_AURA(unit)
+	if not TomeButton:IsVisible() then return end
+	tomeButtonActiveUpdate()
+	tomeButtonUpdate()
 end
 
 registerEventHandlers(events)
