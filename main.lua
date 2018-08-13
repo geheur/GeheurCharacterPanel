@@ -85,6 +85,9 @@ local function processTalent(rowN, talentN)
 		--bla:Show()
 	end
 
+	--talent.Cover:SetColorTexture(1, 1, 1, 1)
+	talent.Cover:SetAlpha(0.65)
+
 	talent:CreateFontString(nil, "ARTWORK", "TalentCooldownString")
 	talent.Text:SetTextColor(1, 0, 0, 1)
 	talent:HookScript("OnUpdate", function(self)
@@ -393,6 +396,7 @@ function events:ADDON_LOADED(...)
 		for i=1,MAX_TALENT_TIERS do
 			for j=1,NUM_TALENT_COLUMNS do
 				local talentButton = _G["PlayerTalentFrameTalentsTalentRow"..i.."Talent"..j]
+				local talentButtonIconTexture = _G["PlayerTalentFrameTalentsTalentRow"..i.."Talent"..j.."IconTexture"]
 				if talentButton.knownSelection and talentButton.MyBorder1 then
 					if talentButton.knownSelection:IsShown() then
 						talentButton.MyBorder1:Show()
@@ -406,6 +410,7 @@ function events:ADDON_LOADED(...)
 						talentButton.MyBorder3:Hide()
 						talentButton.MyBorder4:Hide()
 						talentButton.Cover:Show()
+						talentButtonIconTexture:SetDesaturated(false)
 					end
 				end
 			end
