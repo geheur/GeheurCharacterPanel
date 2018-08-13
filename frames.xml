@@ -4,32 +4,33 @@
 			 	<Texture name="MySelectedTalentBorder1"  file="Interface\ChatFrame\ChatFrameBackground" virtual="true">
 					<Anchors>
 						<Anchor point="TOPLEFT"/>
-						<Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT" y="-5"/>
+						<Anchor point="BOTTOMRIGHT" relativePoint="TOPRIGHT" y="-1"/>
 					</Anchors>
 					<Color r="1.0" g="0.8" b="0.2" a="1.0"/>
 			 	</Texture>
 			 	<Texture name="MySelectedTalentBorder2"  file="Interface\ChatFrame\ChatFrameBackground" virtual="true">
 					<Anchors>
-						<Anchor point="TOPLEFT" y="-5"/>
-						<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" x="5" y="5"/>
+						<Anchor point="TOPLEFT" y="-1"/>
+						<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMLEFT" x="1" y="1"/>
 					</Anchors>
 					<Color r="1.0" g="0.8" b="0.2" a="1.0"/>
 			 	</Texture>
 			 	<Texture name="MySelectedTalentBorder3"  file="Interface\ChatFrame\ChatFrameBackground" virtual="true">
 					<Anchors>
 						<Anchor point="BOTTOMLEFT"/>
-						<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" y="5"/>
+						<Anchor point="TOPRIGHT" relativePoint="BOTTOMRIGHT" y="1"/>
 					</Anchors>
 					<Color r="1.0" g="0.8" b="0.2" a="1.0"/>
 			 	</Texture>
 			 	<Texture name="MySelectedTalentBorder4"  file="Interface\ChatFrame\ChatFrameBackground" virtual="true">
 					<Anchors>
-						<Anchor point="TOPRIGHT" y="-5"/>
-						<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-5" y="5"/>
+						<Anchor point="TOPRIGHT" y="-1"/>
+						<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" x="-1" y="1"/>
 					</Anchors>
 					<Color r="1.0" g="0.8" b="0.2" a="1.0"/>
 			 	</Texture>
 
+	<!--
 	<Frame name="MySelectedTalentBorder" virtual="true">
 		<Layers>
 			<Layer level="ARTWORK">
@@ -64,6 +65,7 @@
 			</Layer>
 		</Layers>
 	</Frame>
+	-->
 
 	<Font name="TalentCdFont" font="Fonts/ARIALN.TTF" outline="THICK" height="16" virtual="true"/>
 	<Font name="TomeCountFont" font="Fonts/ARIALN.TTF" outline="THICK" height="11" virtual="true"/>
@@ -86,8 +88,8 @@
 
 	<Frame name="GeheurTalentFrame" inherits="" parent="PaperDollFrame">
 		<Anchors>
-			<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="CharacterFrameInsetRight" x="3" y="0"/>
-			<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="CharacterFrameInsetRight" x="253" y="0"/>
+			<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="CharacterFrame" x="3" y="0"/>
+			<Anchor point="BOTTOMRIGHT" relativePoint="BOTTOMRIGHT" relativeTo="CharacterFrameInsetRight" x="223" y="0"/>
 		</Anchors>
 	</Frame>
 

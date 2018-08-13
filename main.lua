@@ -12,7 +12,7 @@
 -- TODO consider putting the talent frame in directly, instead of putting it into MyFrame.
 -- TODO is it better to move the existing talent frames, or create new ones?
 
-local debug = true
+local debug = false
 
 function printTable(t)
 	for i,v in pairs(t) do
@@ -158,12 +158,8 @@ end
 
 local buffs = {"Tome of the Tranquil Mind", "Codex of the Tranquil Mind", "Feint"} -- TODO remove "Feint".
 -- Priority order - item ids with lower indices will be used first.
-local items
-if false then
-	items = {12692, 140192} -- Dalaran Hearthstone
-else
-	items = {143785, 141446} -- SB tranquil mind tome from dalaran intro quest, regular tranquil mind tome.
-end
+local items = {143785, 141446}
+--local items = {12692, 140192} -- Test values.
 
 local function anyTalentOnCd()
 	local longestDuration = 0
@@ -243,7 +239,7 @@ local function tomeButtonItemUpdate()
 	for i,v in pairs(items) do
 		local count = GetItemCount(v)
 		if count > 0 then
-			combatDefer(function() print("setting item "..v) TomeButton:SetAttribute("macrotext", "/use item:"..v) end)
+			combatDefer(function() TomeButton:SetAttribute("macrotext", "/use item:"..v) end)
 			return
 		end
 	end
@@ -297,11 +293,12 @@ function CharacterPanelOnShow()
 		characterPanelSetUp = true
 	end
 	PlayerTalentFrameTalents:Show()
+	PaperDollEquipmentManagerPane:Show()
 end
 end
 
 local function SetupCharacterPanel()
-	CharacterFrame:HookScript("OnShow", function()
+	PaperDollFrame:HookScript("OnShow", function()
 		CharacterPanelOnShow()
 	end)
 
@@ -322,16 +319,29 @@ local function SetupCharacterPanel()
 	end
 
 	PlayerTalentFrameTalentsPvpTalentButton:Click()
+	PlayerTalentFrameTalentsPvpTalentButton:Click()
 	PlayerTalentFrameTalentsPvpTalentButton:SetPoint("RIGHT")
 	PlayerTalentFrameTalentsPvpTalentButton:SetPoint("BOTTOMRIGHT", PlayerTalentFrameTalents, "TOPRIGHT", -10, -10)
 
 	PlayerTalentFrameTalentsPvpTalentFrame:SetPoint("TOPRIGHT", PlayerTalentFrameTalents)
 	PlayerTalentFrameTalentsPvpTalentFrame:SetPoint("BOTTOMRIGHT", PlayerTalentFrameTalents)
+	PlayerTalentFrameTalentsPvpTalentFrame:SetPoint("LEFT", PlayerTalentFrameTalents, "RIGHT", -80, 0)
+	--PlayerTalentFrameTalentsPvpTalentFrameTalentList:SetPoint("BOTTOMLEFT", PaperDollEquipmentManagerPaneScrollBarScrollDownButton, "BOTTOMRIGHT", 0, 0)
+	PlayerTalentFrameTalentsPvpTalentFrameTalentList:SetPoint("BOTTOMLEFT", GeheurTalentFrame, "BOTTOMRIGHT", 0, 0)
+	PlayerTalentFrameTalentsPvpTalentFrameTalentList:SetPoint("TOPLEFT", GeheurTalentFrame, "TOPRIGHT", 0, 0)
+	PlayerTalentFrameTalentsPvpTalentFrameTalentList:HookScript("OnShow", function() PaperDollEquipmentManagerPane:Hide() end)
+	PlayerTalentFrameTalentsPvpTalentFrameTalentList:HookScript("OnHide", function() PaperDollEquipmentManagerPane:Show() end)
 
 	PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("BACKGROUND")
 	PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("OVERLAY")
 
 	AddSpecButtons()
+
+	PaperDollEquipmentManagerPane:ClearAllPoints()
+	PaperDollEquipmentManagerPane:SetPoint("BOTTOMLEFT", PlayerTalentFrameTalents, "BOTTOMRIGHT")
+	PaperDollEquipmentManagerPane:SetPoint("TOP", CharacterFrame, "TOP")
+	PaperDollSidebarTab3:SetScript("OnClick", function() end)
+	PaperDollSidebarTab3:Hide()
 
 end
 
@@ -382,26 +392,28 @@ function events:ADDON_LOADED(...)
 	hooksecurefunc("TalentFrame_Update", function()
 		for i=1,MAX_TALENT_TIERS do
 			for j=1,NUM_TALENT_COLUMNS do
-				local bu = _G["PlayerTalentFrameTalentsTalentRow"..i.."Talent"..j]
-				if bu.knownSelection then
-					if bu.MyBorder1 then
-						if bu.knownSelection:IsShown() then
-							bu.MyBorder1:Show()
-							bu.MyBorder2:Show()
-							bu.MyBorder3:Show()
-							bu.MyBorder4:Show()
-							bu.Cover:Hide()
-						else
-							bu.MyBorder1:Hide()
-							bu.MyBorder2:Hide()
-							bu.MyBorder3:Hide()
-							bu.MyBorder4:Hide()
-							bu.Cover:Show()
-						end
+				local talentButton = _G["PlayerTalentFrameTalentsTalentRow"..i.."Talent"..j]
+				if talentButton.knownSelection and talentButton.MyBorder1 then
+					if talentButton.knownSelection:IsShown() then
+						talentButton.MyBorder1:Show()
+						talentButton.MyBorder2:Show()
+						talentButton.MyBorder3:Show()
+						talentButton.MyBorder4:Show()
+						talentButton.Cover:Hide()
+					else
+						talentButton.MyBorder1:Hide()
+						talentButton.MyBorder2:Hide()
+						talentButton.MyBorder3:Hide()
+						talentButton.MyBorder4:Hide()
+						talentButton.Cover:Show()
 					end
 				end
 			end
 		end
+	end)
+
+	hooksecurefunc("PaperDollFrame_SetSidebar", function()
+		PaperDollEquipmentManagerPane:Show()
 	end)
 
 
@@ -428,7 +440,6 @@ function events:PLAYER_SPECIALIZATION_CHANGED(...)
 	--MyButton1:SetNormalTexture(icon)
 end
 function events:BAG_UPDATE(...)
-	print("BAG_UPDATE")
 	tomeButtonItemUpdate()
 end
 function events:PLAYER_REGEN_DISABLED(...)
