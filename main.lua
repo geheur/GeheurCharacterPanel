@@ -74,6 +74,17 @@ local function processTalent(rowN, talentN)
 	--talent.ShadowedTexture:SetPoint("BOTTOMRIGHT", talent) -- ElvUI only.
 	talent:SetWidth(40)
 
+	--local f = CreateFrame("Frame", "bla", talent, "MySelectedTalentBorder")
+	--f:SetParent(talent)
+	--talent.myBorder = f
+	for i=1,4 do
+		local bla = talent:CreateTexture(nil, "ARTWORK", "MySelectedTalentBorder"..i)
+		talent["MyBorder"..i] = bla
+		--bla:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 20, -20)
+		--bla:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -20, 20)
+		--bla:Show()
+	end
+
 	talent:CreateFontString(nil, "ARTWORK", "TalentCooldownString")
 	talent.Text:SetTextColor(1, 0, 0, 1)
 	talent:HookScript("OnUpdate", function(self)
@@ -85,6 +96,8 @@ local function processTalent(rowN, talentN)
 			self.Text:Hide()
 		end
 	end)
+
+	-- selection:SetAlpha(1) -- For ElvUI. -- Doesn't accomplish my goals, at least not entirely.
 
 	if talentN == 1 then
 		local leftAnchor = _G["PlayerTalentFrameTalentsTalentRow" .. rowN]
@@ -277,11 +290,11 @@ local function AddSpecButtons()
 end
 
 local CharacterPanelOnShow do
-local talentsloaded = false
+local characterPanelSetUp = false
 function CharacterPanelOnShow()
-	if not talentsloaded then
-		TalentFrame_LoadUI()
-		talentsloaded = true
+	if not characterPanelSetUp then
+		-- TODO apparently this does nothing at the moment, lol. Maybe I should move SetupCharacterPanel here?
+		characterPanelSetUp = true
 	end
 	PlayerTalentFrameTalents:Show()
 end
@@ -292,11 +305,11 @@ local function SetupCharacterPanel()
 		CharacterPanelOnShow()
 	end)
 
-	--CharacterFrameInsetRight:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
+	PlayerTalentFrameTalentsTutorialButton:HookScript("OnShow", function(self) self:Hide() end)
 
-	PlayerTalentFrameTalents:SetParent(MyFrame)
-	PlayerTalentFrameTalents:SetPoint("TOPLEFT", MyFrame, nil, 0, 0)
-	PlayerTalentFrameTalents:SetPoint("BOTTOMRIGHT", MyFrame, nil, 0, 0)
+	PlayerTalentFrameTalents:SetParent(GeheurTalentFrame)
+	PlayerTalentFrameTalents:SetPoint("TOPLEFT", GeheurTalentFrame, nil, 0, 0)
+	PlayerTalentFrameTalents:SetPoint("BOTTOMRIGHT", GeheurTalentFrame, nil, 0, 0)
 
 	PlayerTalentFrameTalents:DisableDrawLayer("BORDER")
 
@@ -315,11 +328,8 @@ local function SetupCharacterPanel()
 	PlayerTalentFrameTalentsPvpTalentFrame:SetPoint("TOPRIGHT", PlayerTalentFrameTalents)
 	PlayerTalentFrameTalentsPvpTalentFrame:SetPoint("BOTTOMRIGHT", PlayerTalentFrameTalents)
 
-	--PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("ARTWORK")
 	PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("BACKGROUND")
 	PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("OVERLAY")
-	--PlayerTalentFrameTalentsPvpTalentFrame:DisableDrawLayer("BORDER")
-	--PaperDollEquipmentManagerPane:SetPoint("TOPLEFT", MyFrame, "TOPRIGHT", 0, 0)
 
 	AddSpecButtons()
 
@@ -369,11 +379,35 @@ function events:ADDON_LOADED(...)
 	if addonIsLoaded then return end
 	addonIsLoaded = true
 
+	hooksecurefunc("TalentFrame_Update", function()
+		for i=1,MAX_TALENT_TIERS do
+			for j=1,NUM_TALENT_COLUMNS do
+				local bu = _G["PlayerTalentFrameTalentsTalentRow"..i.."Talent"..j]
+				if bu.knownSelection then
+					if bu.MyBorder1 then
+						if bu.knownSelection:IsShown() then
+							bu.MyBorder1:Show()
+							bu.MyBorder2:Show()
+							bu.MyBorder3:Show()
+							bu.MyBorder4:Show()
+							bu.Cover:Hide()
+						else
+							bu.MyBorder1:Hide()
+							bu.MyBorder2:Hide()
+							bu.MyBorder3:Hide()
+							bu.MyBorder4:Hide()
+							bu.Cover:Show()
+						end
+					end
+				end
+			end
+		end
+	end)
+
 
 end
 end
 function events:PLAYER_SPECIALIZATION_CHANGED(...)
-	--TalentFrame_LoadUI()
 	PlayerTalentFrame_Refresh()
 	-- TODO is there a better way?
 	ToggleTalentFrame(2)
