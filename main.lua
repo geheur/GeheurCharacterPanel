@@ -85,7 +85,6 @@ local function processTalent(rowN, talentN)
 		--bla:Show()
 	end
 
-	--talent.Cover:SetColorTexture(1, 1, 1, 1)
 	talent.Cover:SetAlpha(0.65)
 
 	talent:CreateFontString(nil, "ARTWORK", "TalentCooldownString")
@@ -305,6 +304,22 @@ local function SetupCharacterPanel()
 		CharacterPanelOnShow()
 	end)
 
+--[[
+PaperDollItemsFrame:SetScript("OnDragStart", function(self)
+	self:SetMovable(true)
+	self:StartMoving()
+end)
+PaperDollItemsFrame:SetScript("OnDragStop", function(self)
+	self:StopMovingOrSizing()
+	self:SetMovable(false)
+
+	if VWQL then
+		VWQL.AnchorQCBLeft = self:GetLeft()
+		VWQL.AnchorQCBTop = self:GetTop() 
+	end
+end)
+--]]
+
 	PlayerTalentFrameTalentsTutorialButton:HookScript("OnShow", function(self) self:Hide() end)
 
 	PlayerTalentFrameTalents:SetParent(GeheurTalentFrame)
@@ -424,11 +439,26 @@ function events:ADDON_LOADED(...)
 
 end
 end
+
+-- Bypasses the need for talent page to be selected in the talents window.
+local function My_PlayerTalentFrame_Refresh()
+	ButtonFrameTemplate_ShowAttic(PlayerTalentFrame);
+	PlayerTalentFrame_HideSpecsTab();
+	PlayerTalentFrameTalents.talentGroup = PlayerTalentFrame.talentGroup;
+	TalentFrame_Update(PlayerTalentFrameTalents, "player");
+	PlayerTalentFrame_ShowTalentTab();
+	PlayerTalentFrame_HidePetSpecTab();
+	PlayerTalentFrameTalentsPvpTalentButton:Update();
+
+	if CharacterFrame:IsShown() then PlayerTalentFrameTalents:Show() end
+end
+
 function events:PLAYER_SPECIALIZATION_CHANGED(...)
-	PlayerTalentFrame_Refresh()
+	print("PLAYER_SPECIALIZATION_CHANGED", ...)
 	-- TODO is there a better way?
 	ToggleTalentFrame(2)
 	ToggleTalentFrame(2)
+	My_PlayerTalentFrame_Refresh()
 
 	--[[ Doesn't work
 	for i=1,4 do
