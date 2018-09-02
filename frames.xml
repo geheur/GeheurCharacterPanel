@@ -86,6 +86,7 @@
 		<Size><AbsDimension x="50" y="50"/></Size>
 	</Button>
 
+	<!-- <Frame name="GeheurTalentFrame" inherits="" parent="PaperDollFrame"> -->
 	<Frame name="GeheurTalentFrame" inherits="" parent="PaperDollFrame">
 		<Anchors>
 			<Anchor point="TOPLEFT" relativePoint="TOPRIGHT" relativeTo="CharacterFrame" x="3" y="0"/>

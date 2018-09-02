@@ -1,20 +1,12 @@
---[[
-/script printTable(GENERAL_CHAT_DOCK.primary)
-/script print(GENERAL_CHAT_DOCK.primary:GetName())
-/script GENERAL_CHAT_DOCK.primary:StartSizing("BOTTOMRIGHT")
-/script GENERAL_CHAT_DOCK.primary:StopMovingOrSizing()
-/script printTable({GENERAL_CHAT_DOCK.primary:GetMaxResize()})
-/script GENERAL_CHAT_DOCK.primary:SetMaxResize(5000, 5000)
-
-/script CreateFrame("Frame", "name", nil, "PlayerTalentRowTemplate")
---]]
 
 -- TODO consider putting the talent frame in directly, instead of putting it into MyFrame.
 -- TODO is it better to move the existing talent frames, or create new ones?
 
+-- TODO reparent so that playertalentframetalents isn't used.
+
 local debug = false
 
-function printTable(t)
+local function printTable(t)
 	for i,v in pairs(t) do
 		if type(v) == "table" then
 			print(i, v:GetName())
@@ -66,23 +58,11 @@ local function processTalent(rowN, talentN)
 	local name = _G[talentName .. "Name"]
 	local iconTexture = _G[talentName .. "IconTexture"]
 
-	--PlayerTalentFrameTalentsTalentRow1Talent1:SetWidth(PlayerTalentFrameTalentsTalentRow1Talent1:GetWidth())
-	--print(PlayerTalentFrameTalentsTalentRow1Talent1:GetHeight())
-	--PlayerTalentFrameTalentsTalentRow1Talent1.GlowFrame:Hide()
-	--PlayerTalentFrameTalentsTalentRow1Talent1Selection:Hide()
-	--talent.ShadowedTexture:SetPoint("TOPLEFT", talent) -- ElvUI only.
-	--talent.ShadowedTexture:SetPoint("BOTTOMRIGHT", talent) -- ElvUI only.
 	talent:SetWidth(40)
 
-	--local f = CreateFrame("Frame", "bla", talent, "MySelectedTalentBorder")
-	--f:SetParent(talent)
-	--talent.myBorder = f
 	for i=1,4 do
 		local bla = talent:CreateTexture(nil, "ARTWORK", "MySelectedTalentBorder"..i)
 		talent["MyBorder"..i] = bla
-		--bla:SetPoint("TOPLEFT", UIParent, "TOPLEFT", 20, -20)
-		--bla:SetPoint("BOTTOMRIGHT", UIParent, "BOTTOMRIGHT", -20, 20)
-		--bla:Show()
 	end
 
 	talent.Cover:SetAlpha(0.65)
@@ -454,7 +434,7 @@ local function My_PlayerTalentFrame_Refresh()
 end
 
 function events:PLAYER_SPECIALIZATION_CHANGED(...)
-	print("PLAYER_SPECIALIZATION_CHANGED", ...)
+	--print("PLAYER_SPECIALIZATION_CHANGED", ...)
 	-- TODO is there a better way?
 	ToggleTalentFrame(2)
 	ToggleTalentFrame(2)
