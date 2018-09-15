@@ -243,6 +243,17 @@ local function tomeButtonActiveUpdate()
 	end
 end
 
+function TomeButton:CombatHide()
+	self:SetParent(UIParent)
+	self:Hide()
+end
+
+function TomeButton:CombatShow()
+	TomeButton:SetParent(GeheurTalentFrame)
+	TomeButton:SetPoint("BOTTOMLEFT")
+	TomeButton:Show()
+end
+
 local function initTomeButton()
 	TomeButtonIcon:SetTexture(GetItemIcon(143785))
 
@@ -251,20 +262,64 @@ local function initTomeButton()
 
 	TomeButton:SetScript("OnUpdate", tomeButtonUpdate)
 	TomeButton:SetScript("OnShow", tomeButtonActiveUpdate)
+
+	--CharacterFrame:HookScript("OnShow", function()
+		--if not InCombatLockdown() then
+			--TomeButton:CombatShow();
+		--end
+	--end)
+	if InCombatLockdown() then TomeButton:CombatHide() else TomeButton:CombatShow() end
+end
+
+local function updateSpecButtons()
+	local spec = GetSpecialization()
+	for i=1,GetNumSpecializations() do
+		_G["SpecChange"..i]:GetNormalTexture():SetDesaturated(i ~= spec)
+	end
+	if select(2, UnitClass("player")) == "HUNTER" then
+		local petSpec = GetSpecialization(false, true)
+		for i=1,GetNumSpecializations(false, true) do
+			_G["PetSpecChange"..i]:GetNormalTexture():SetDesaturated(i ~= petSpec)
+		end
+	end
+end
+
+local function AddPetSpecButtons()
+	local previousFrame = nil
+	local PET = true
+	for i=1,GetNumSpecializations(false, PET) do
+		local frame = CreateFrame("BUTTON", "PetSpecChange"..i, SpecButtonsBar, "MyPetSpecButton")
+		local _,_,_,icon = GetSpecializationInfo(i, false, PET, nil, sex);
+		frame:SetNormalTexture(icon)
+		if i == 1 then
+			frame:SetPoint("TOPLEFT", SpecChange1, "BOTTOMLEFT")
+		else
+			frame:SetPoint("BOTTOMLEFT", previousFrame, "BOTTOMRIGHT")
+		end
+		previousFrame = frame
+		frame:SetScript("OnClick", function() if GetSpecialization(false, PET) ~= i then SetSpecialization(i, true) end end)
+	end
 end
 
 local function AddSpecButtons()
 	SpecButtonsBar:SetParent(PlayerTalentFrameTalents)
-	SpecChange1:ClearAllPoints()
-	SpecChange1:SetPoint("TOPLEFT", PlayerTalentFrameTalents, "BOTTOMLEFT", 3, 0)
-	--SpecButtonsBar:SetPoint("TOPLEFT", PlayerTalentFrameTalents, "BOTTOMLEFT", 3, 0)
-	for i=1,4 do
-		local _, name, description, icon = GetSpecializationInfo(i, false, false, nil, sex);
-		_G["SpecChange"..i]:SetNormalTexture(icon)
+	local previousFrame = nil
+	for i=1,GetNumSpecializations() do
+		local frame = CreateFrame("BUTTON", "SpecChange"..i, SpecButtonsBar, "MySpecButton")
+		local _,_,_,icon = GetSpecializationInfo(i, false, false, nil, sex);
+		frame:SetNormalTexture(icon)
+		if i == 1 then
+			frame:SetPoint("TOPLEFT", PlayerTalentFrameTalents, "BOTTOMLEFT", 3, 0)
+		else
+			frame:SetPoint("BOTTOMLEFT", previousFrame, "BOTTOMRIGHT")
+		end
+		previousFrame = frame
+		frame:SetScript("OnClick", function() if GetSpecialization() ~= i then SetSpecialization(i) end end)
 	end
-	if not (select(2, UnitClass("player")) == "DRUID") then
-		SpecChange4:Hide()
+	if select(2, UnitClass("player")) == "HUNTER" then
+		AddPetSpecButtons()
 	end
+	updateSpecButtons()
 end
 
 local CharacterPanelOnShow do
@@ -430,15 +485,22 @@ local function My_PlayerTalentFrame_Refresh()
 	PlayerTalentFrame_HidePetSpecTab();
 	PlayerTalentFrameTalentsPvpTalentButton:Update();
 
+	updateSpecButtons()
+
 	if CharacterFrame:IsShown() then PlayerTalentFrameTalents:Show() end
 end
 
+function events:UNIT_PET(...)
+	if (...) == "player" then
+		updateSpecButtons()
+	end
+end
 function events:PLAYER_SPECIALIZATION_CHANGED(...)
-	--print("PLAYER_SPECIALIZATION_CHANGED", ...)
-	-- TODO is there a better way?
-	ToggleTalentFrame(2)
-	ToggleTalentFrame(2)
-	My_PlayerTalentFrame_Refresh()
+	if (...) == "player" then
+		ToggleTalentFrame(2)
+		ToggleTalentFrame(2)
+		My_PlayerTalentFrame_Refresh()
+	end
 
 	--[[ Doesn't work
 	for i=1,4 do
@@ -460,6 +522,8 @@ end
 function events:PLAYER_REGEN_DISABLED(...)
 	tomeButtonActiveUpdate()
 	tomeButtonUpdate()
+
+	TomeButton:CombatHide()
 end
 function events:PLAYER_REGEN_ENABLED(...)
 	for _,f in pairs(combatDeferQueue) do
@@ -468,6 +532,8 @@ function events:PLAYER_REGEN_ENABLED(...)
 
 	tomeButtonActiveUpdate()
 	tomeButtonUpdate()
+
+	TomeButton:CombatShow()
 end
 function events:PLAYER_UPDATE_RESTING(...)
 	tomeButtonActiveUpdate()
@@ -478,5 +544,15 @@ function events:UNIT_AURA(unit)
 	tomeButtonActiveUpdate()
 	tomeButtonUpdate()
 end
+--[[
+function events:PLAYER_REGEN_DISABLED()
+	TomeButton:Hide()
+	TomeButton:SetParent(UIParent)
+end
+function events:PLAYER_REGEN_ENABLED()
+	TomeButton:Show()
+	TomeButton:SetParent(GeheurTalentFrame)
+end
+--]]
 
 registerEventHandlers(events)

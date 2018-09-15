@@ -85,6 +85,9 @@
 	<Button name="MySpecButton" inherits="UIPanelCloseButton" virtual="true">
 		<Size><AbsDimension x="50" y="50"/></Size>
 	</Button>
+	<Button name="MyPetSpecButton" inherits="UIPanelCloseButton" virtual="true">
+		<Size><AbsDimension x="30" y="30"/></Size>
+	</Button>
 
 	<!-- <Frame name="GeheurTalentFrame" inherits="" parent="PaperDollFrame"> -->
 	<Frame name="GeheurTalentFrame" inherits="" parent="PaperDollFrame">
@@ -94,7 +97,7 @@
 		</Anchors>
 	</Frame>
 
-	<Button name="TomeButton" inherits="SecureActionButtonTemplate,ActionButtonTemplate" parent="GeheurTalentFrame">
+	<Button name="TomeButton" inherits="SecureActionButtonTemplate,ActionButtonTemplate">
 		<Anchors>
 			<Anchor point="BOTTOMLEFT"/>
 		</Anchors>
@@ -117,47 +120,5 @@
 	</Button>
 
 	<Frame name="SpecButtonsBar">
-		<Frames>
-			<Button name="SpecChange1" inherits="MySpecButton">
-				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMLEFT" relativeTo="SpecButtonsBar"/>
-				</Anchors>
-				<Scripts>
-					<OnClick>
-						SetSpecialization(1)
-					</OnClick>
-				</Scripts>
-			</Button>
-			<Button name="SpecChange2" inherits="MySpecButton">
-				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="SpecChange1"/>
-				</Anchors>
-				<Scripts>
-					<OnClick>
-						SetSpecialization(2)
-					</OnClick>
-				</Scripts>
-			</Button>
-			<Button name="SpecChange3" inherits="MySpecButton">
-				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="SpecChange2"/>
-				</Anchors>
-				<Scripts>
-					<OnClick>
-						SetSpecialization(3)
-					</OnClick>
-				</Scripts>
-			</Button>
-			<Button name="SpecChange4" inherits="MySpecButton">
-				<Anchors>
-					<Anchor point="BOTTOMLEFT" relativePoint="BOTTOMRIGHT" relativeTo="SpecChange3"/>
-				</Anchors>
-				<Scripts>
-					<OnClick>
-						SetSpecialization(3)
-					</OnClick>
-				</Scripts>
-			</Button>
-		</Frames>
 	</Frame>
 </Ui>
