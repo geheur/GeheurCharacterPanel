@@ -69,13 +69,13 @@ local function processTalent(rowN, talentN)
 
 	talent:CreateFontString(nil, "ARTWORK", "TalentCooldownString")
 	talent.Text:SetTextColor(1, 0, 0, 1)
-	talent:HookScript("OnUpdate", function(self)
+	TomeButton:HookScript("OnUpdate", function()
 		local onCd, remainingCd = isTalentOnCd(rowN, talentN) 
 		if onCd then
-			self.Text:Show()
-			self.Text:SetText(string.format("%.0f", remainingCd))
+			talent.Text:Show()
+			talent.Text:SetText(string.format("%.0f", remainingCd))
 		else
-			self.Text:Hide()
+			talent.Text:Hide()
 		end
 	end)
 
