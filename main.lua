@@ -243,6 +243,9 @@ local function tomeButtonActiveUpdate()
 	end
 end
 
+--[[
+CombatHide and CombatShow are used to remove the tome button from the character panel at all possible times. The reason for this is that the tome button is an action button and is therefore protected from being moved/hidden whatever in combat. This causes an odd interaction with DejaCharacterStats which prevents the DejaCharacterStatus panel from showing up when you open the character panel in combat. Hiding the tome button when combat is entered or left doesn't work for some reason.
+--]]
 function TomeButton:CombatHide()
 	self:SetParent(UIParent)
 	self:Hide()
@@ -268,7 +271,7 @@ local function initTomeButton()
 			--TomeButton:CombatShow();
 		--end
 	--end)
-	if InCombatLockdown() then TomeButton:CombatHide() else TomeButton:CombatShow() end
+	TomeButton:CombatHide()
 end
 
 local function updateSpecButtons()
@@ -323,20 +326,31 @@ local function AddSpecButtons()
 end
 
 local CharacterPanelOnShow do
-local characterPanelSetUp = false
-function CharacterPanelOnShow()
-	if not characterPanelSetUp then
-		-- TODO apparently this does nothing at the moment, lol. Maybe I should move SetupCharacterPanel here?
-		characterPanelSetUp = true
+	local characterPanelSetUp = false
+	function CharacterPanelOnShow()
+		if not characterPanelSetUp then
+			-- TODO apparently this does nothing at the moment, lol. Maybe I should move SetupCharacterPanel here?
+			characterPanelSetUp = true
+		end
+		PlayerTalentFrameTalents:Show()
+		PaperDollEquipmentManagerPane:Show()
+		if not InCombatLockdown() then
+			TomeButton:CombatShow()
+		end
 	end
-	PlayerTalentFrameTalents:Show()
-	PaperDollEquipmentManagerPane:Show()
 end
+function CharacterPanelOnHide()
+	if not InCombatLockdown() then
+		TomeButton:CombatHide()
+	end
 end
 
 local function SetupCharacterPanel()
 	PaperDollFrame:HookScript("OnShow", function()
 		CharacterPanelOnShow()
+	end)
+	PaperDollFrame:HookScript("OnHide", function()
+		CharacterPanelOnHide()
 	end)
 
 --[[
@@ -520,10 +534,7 @@ function events:BAG_UPDATE(...)
 	tomeButtonItemUpdate()
 end
 function events:PLAYER_REGEN_DISABLED(...)
-	tomeButtonActiveUpdate()
-	tomeButtonUpdate()
-
-	TomeButton:CombatHide()
+	if CharacterFrame:IsVisible() then TomeButton:CombatHide() end
 end
 function events:PLAYER_REGEN_ENABLED(...)
 	for _,f in pairs(combatDeferQueue) do
@@ -533,7 +544,7 @@ function events:PLAYER_REGEN_ENABLED(...)
 	tomeButtonActiveUpdate()
 	tomeButtonUpdate()
 
-	TomeButton:CombatShow()
+	if CharacterFrame:IsVisible() then TomeButton:CombatShow() end
 end
 function events:PLAYER_UPDATE_RESTING(...)
 	tomeButtonActiveUpdate()
