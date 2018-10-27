@@ -244,15 +244,18 @@ local function tomeButtonActiveUpdate()
 end
 
 --[[
-CombatHide and CombatShow are used to remove the tome button from the character panel at all possible times. The reason for this is that the tome button is an action button and is therefore protected from being moved/hidden whatever in combat. This causes an odd interaction with DejaCharacterStats which prevents the DejaCharacterStatus panel from showing up when you open the character panel in combat. Hiding the tome button when combat is entered or left doesn't work for some reason.
+CombatHide and CombatShow are used to remove the tome button from the character panel at all possible times. The reason for this is that the tome button is an action button and is therefore protected from being moved/hidden whatever in combat. This causes an odd interaction with DejaCharacterStats which prevents the DejaCharacterStatus panel from showing up when you open the character panel in combat. Both changing the button's parent, and anchor, are necessary.
 --]]
 function TomeButton:CombatHide()
 	self:SetParent(UIParent)
+	self:ClearAllPoints()
+	self:SetPoint("BOTTOMRIGHT", UIParent, "TOPLEFT")
 	self:Hide()
 end
 
 function TomeButton:CombatShow()
 	TomeButton:SetParent(GeheurTalentFrame)
+	self:ClearAllPoints()
 	TomeButton:SetPoint("BOTTOMLEFT")
 	TomeButton:Show()
 end
@@ -346,10 +349,10 @@ function CharacterPanelOnHide()
 end
 
 local function SetupCharacterPanel()
-	PaperDollFrame:HookScript("OnShow", function()
+	CharacterFrame:HookScript("OnShow", function()
 		CharacterPanelOnShow()
 	end)
-	PaperDollFrame:HookScript("OnHide", function()
+	CharacterFrame:HookScript("OnHide", function()
 		CharacterPanelOnHide()
 	end)
 
